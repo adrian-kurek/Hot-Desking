@@ -16,10 +16,11 @@ const logger = new Logger();
 
 async function startServer(port: string) {
   try {
-    logger.info(`server started at port ${port}`);
     await server.listen({ port: +port });
+    logger.info(`server started at port ${port}`);
   } catch (err) {
     server.log.error(err);
+    logger.error("failed to start a server", { err });
     process.exit(1);
   }
 }
