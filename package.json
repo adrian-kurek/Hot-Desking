@@ -1,0 +1,11 @@
+{
+  "name": "hot-desking",
+  "private": true,
+  "description": "system rezerwacji biurek",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1"
+  }
+}
