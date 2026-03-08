@@ -7,7 +7,7 @@ import path from "path";
 import { logger } from "../logger";
 
 dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
-const databaseURL = process.env.DATABASE_URL;
+const databaseURL = process.env.DATABASE_URL!;
 
 if (!databaseURL) {
   throw new Error("DATABASE_URL is not defined in the environment variables.");
