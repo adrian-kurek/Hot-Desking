@@ -3,8 +3,15 @@ import fastify from "fastify";
 import { createContext } from "./context.js";
 import { appRouter } from "./routes/app.js";
 import { Logger } from "./utils/logger.js";
+import cors from "@fastify/cors";
 const server = fastify({});
 
+
+await server.register(cors, {
+  origin: ["http://localhost:5173"],
+  methods: ["GET", "OPTIONS"],
+  credentials: true,
+});
 server.register(fastifyTRPCPlugin, {
   prefix: "/trpc",
   trpcOptions: { router: appRouter, createContext },
