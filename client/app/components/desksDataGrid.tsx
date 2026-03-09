@@ -3,10 +3,12 @@ import type { GridColDef } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
 import { trpc } from "./../trpc";
 import Alert from "@mui/material/Alert";
-import { IconButton, Tooltip, Button } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-interface deskRow {
+import { Button } from "@mui/material";
+
+import * as React from "react";
+import EditModal from "./editModal";
+
+export interface deskRow {
   id: string;
   name: string;
   isAvailable: boolean;
@@ -16,27 +18,61 @@ const handleDelete = (id: number) => {
   console.log(id);
 };
 
-const handleEdit = (row: deskRow) => {
-  console.log(row);
-};
+export function DesksDataGrid() {
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [selectedRow, setSelectedRow] = React.useState<deskRow | null>(null);
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", flex: 1 },
-  { field: "name", headerName: "Nazwa", flex: 1 },
-  { field: "isAvailable", headerName: "Czy dostępne", flex: 1 },
-  {
-    field: "actions",
-    headerName: "Akcje",
-    flex: 1,
-    renderCell: (params) => (
-      <>
+  const handleEdit = (row: deskRow) => {
+    setSelectedRow(row);
+    setEditModalOpen(true);
+  };
+
+  const reserveDesk = trpc.desks.reservate.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (error) => {
+      return (
+        <Alert severity="error">
+          Błąd podczas próby rezerwacji biurka: {error.message}
+        </Alert>
+      );
+    },
+  });
+  const deleteDesk = trpc.desks.delete.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (error) => {
+      return (
+        <Alert severity="error">
+          Błąd podczas próby usuwania biurka: {error.message}
+        </Alert>
+      );
+    },
+  });
+
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Nazwa", flex: 1 },
+    {
+      field: "isAvailable",
+      headerName: "Czy dostępne",
+      valueFormatter: (value: boolean) => (value ? "Tak" : "Nie"),
+      flex: 1,
+    },
+    {
+      field: "actions",
+      headerName: "Akcje",
+      flex: 1,
+      renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1, marginBlock: 1 }}>
           <Button
             variant="contained"
             color="primary"
             size="small"
             disabled={!params.row.isAvailable}
-            onClick={() => console.log("hej")}
+            onClick={() => reserveDesk.mutate({ id: params.row.id || "" })}
           >
             Zarezerwuj
           </Button>
@@ -44,6 +80,7 @@ const columns: GridColDef[] = [
             variant="contained"
             color="warning"
             size="small"
+            disabled={!params.row.isAvailable}
             onClick={() => handleEdit(params.row)}
           >
             Edytuj
@@ -52,19 +89,17 @@ const columns: GridColDef[] = [
             variant="contained"
             color="error"
             size="small"
-            onClick={() => handleDelete(params.row.id)}
+            disabled={!params.row.isAvailable}
+            onClick={() => deleteDesk.mutate({ id: params.row.id || "" })}
           >
             Usuń
           </Button>
         </Box>
-      </>
-    ),
-  },
-];
+      ),
+    },
+  ];
 
-export function DesksDataGrid() {
-  const { data, isLoading, error } = trpc.desks.test.useQuery();
-
+  const { data, isLoading, error, refetch } = trpc.desks.getDesks.useQuery();
   if (isLoading) return <Alert severity="info">Trwa ładowanie danych</Alert>;
   if (error)
     return <Alert severity="error">Błąd podczas ładowania danych</Alert>;
@@ -72,7 +107,7 @@ export function DesksDataGrid() {
   return (
     <Box sx={{ height: "100%", width: "100%" }}>
       <DataGrid
-        rows={data?.message || []} // make sure data exists
+        rows={data?.message || []}
         columns={columns}
         initialState={{
           pagination: {
@@ -84,6 +119,12 @@ export function DesksDataGrid() {
         pageSizeOptions={[5]}
         checkboxSelection
         disableRowSelectionOnClick
+      />
+      <EditModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        row={selectedRow}
+        refetch={refetch}
       />
     </Box>
   );
