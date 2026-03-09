@@ -1,8 +1,7 @@
 import type { Route } from "./+types/desks";
-import type { GridColDef } from "@mui/x-data-grid";
-import ButtonAppBar from "~/components/appBar";
 import { DesksDataGrid } from "~/components/desksDataGrid";
 import { Box } from "@mui/material";
+import TopBar from "~/components/appBar";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,7 +19,7 @@ export default function Home() {
         height: "calc(100vh - 64px)",
       }}
     >
-      <ButtonAppBar />
+      <TopBar />
       <DesksDataGrid />
     </Box>
   );

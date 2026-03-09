@@ -7,6 +7,7 @@ import { Button } from "@mui/material";
 
 import * as React from "react";
 import EditModal from "./editModal";
+import AddModal from "./addModal";
 
 export interface deskRow {
   id: string;
@@ -20,11 +21,17 @@ const handleDelete = (id: number) => {
 
 export function DesksDataGrid() {
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [addModalOpen, setAddModalOpen] = React.useState(false);
+
   const [selectedRow, setSelectedRow] = React.useState<deskRow | null>(null);
 
   const handleEdit = (row: deskRow) => {
     setSelectedRow(row);
     setEditModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setAddModalOpen(true);
   };
 
   const reserveDesk = trpc.desks.reservate.useMutation({
@@ -106,6 +113,16 @@ export function DesksDataGrid() {
 
   return (
     <Box sx={{ height: "100%", width: "100%" }}>
+      <Box sx={{ width: "100%" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleAdd()}
+          style={{ width: "100%" }}
+        >
+          Dodaj biurko
+        </Button>
+      </Box>
       <DataGrid
         rows={data?.message || []}
         columns={columns}
@@ -120,6 +137,11 @@ export function DesksDataGrid() {
         checkboxSelection
         disableRowSelectionOnClick
       />
+      <AddModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        refetch={refetch}
+      ></AddModal>
       <EditModal
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}

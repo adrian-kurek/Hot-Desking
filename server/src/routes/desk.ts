@@ -3,7 +3,11 @@ import { desksTable } from "@hot-desking/drizzle";
 import { db } from "../context.js";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../index.js";
-import { updateSchema, withOnlyIDSchema } from "../schemas/desk.js";
+import {
+  updateSchema,
+  withOnlyIDSchema,
+  withOnlyNameSchema,
+} from "../schemas/desk.js";
 import { eq } from "drizzle-orm";
 export const deskRouter = router({
   getDesks: publicProcedure.query(async () => {
@@ -20,11 +24,27 @@ export const deskRouter = router({
       });
     }
   }),
+  add: publicProcedure.input(withOnlyNameSchema).mutation(async ({ input }) => {
+    try {
+      logger.info("started adding a new desk");
+      await db.insert(desksTable).values({
+        name: input.name,
+        isAvailable: true,
+      });
+    } catch (error) {
+      logger.error("failed to add a new desk", { error });
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "failed to fetch desks",
+        cause: error,
+      });
+    }
+  }),
   delete: publicProcedure
     .input(withOnlyIDSchema)
     .mutation(async ({ input }) => {
       try {
-        logger.info("started reservating a desk");
+        logger.info("started deleting a desk");
         const desk = await db
           .select({
             isAvailable: desksTable.isAvailable,
@@ -45,7 +65,7 @@ export const deskRouter = router({
         }
         await db.delete(desksTable).where(eq(desksTable.id, input.id));
       } catch (error) {
-        logger.error("failed to get data about desks", { error });
+        logger.error("failed to delete a desk", { error });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "failed to fetch desks",
@@ -83,7 +103,7 @@ export const deskRouter = router({
           })
           .where(eq(desksTable.id, input.id));
       } catch (error) {
-        logger.error("failed to get data about desks", { error });
+        logger.error("failed to reservate a desk", { error });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "failed to fetch desks",
@@ -123,7 +143,7 @@ export const deskRouter = router({
           })
           .where(eq(desksTable.id, input.id));
       } catch (error) {
-        logger.error("failed to get data about desks", { error });
+        logger.error("failed to update a desk", { error });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "failed to fetch desks",
