@@ -2,6 +2,7 @@ import type { Route } from "./+types/desks";
 import { DesksDataGrid } from "~/components/desksDataGrid";
 import { Box } from "@mui/material";
 import TopBar from "~/components/appBar";
+import BarChartOfDesks from "~/components/barChart";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -21,6 +22,7 @@ export default function Home() {
     >
       <TopBar />
       <DesksDataGrid />
+      <BarChartOfDesks />
     </Box>
   );
 }
