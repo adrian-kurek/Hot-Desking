@@ -3,7 +3,14 @@
   "private": true,
   "description": "system rezerwacji biurek",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:drizzle": "pnpm --filter @hot-desking/drizzle run build",
+    "push:drizzle": "pnpm --filter @hot-desking/drizzle run push",
+    "build:server": "pnpm --filter @hot-desking/server run build",
+    "build:client": "pnpm --filter @hot-desking/client run build",
+    "dev:client": "pnpm --filter @hot-desking/client run dev",
+    "dev:server": "pnpm --filter @hot-desking/server run dev",
+    "start:client": "pnpm --filter @hot-desking/client run start",
+    "start:server": "pnpm --filter @hot-desking/server run start"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1"

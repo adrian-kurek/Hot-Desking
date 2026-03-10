@@ -8,7 +8,7 @@ import { sql } from "drizzle-orm";
 const server = fastify({});
 
 await server.register(cors, {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "http://localhost:3000"],
   methods: ["GET", "POST", "OPTIONS"],
   credentials: true,
 });
