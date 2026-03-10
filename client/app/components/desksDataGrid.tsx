@@ -15,15 +15,31 @@ export interface deskRow {
   isAvailable: boolean;
 }
 
-const handleDelete = (id: number) => {
-  console.log(id);
-};
-
 export function DesksDataGrid() {
   const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [addModalOpen, setAddModalOpen] = React.useState(false);
-
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [selectedRow, setSelectedRow] = React.useState<deskRow | null>(null);
+
+  const { data, isLoading, error, refetch } = trpc.desks.getDesks.useQuery();
+  const parseError = (error: { message: string }) => {
+    try {
+      const parsed = JSON.parse(error.message);
+      return parsed[0]?.message ?? error.message;
+    } catch {
+      return error.message;
+    }
+  };
+
+  const reserveDesk = trpc.desks.reservate.useMutation({
+    onSuccess: () => refetch(),
+    onError: (error) => setErrorMsg(parseError(error)),
+  });
+
+  const deleteDesk = trpc.desks.delete.useMutation({
+    onSuccess: () => refetch(),
+    onError: (error) => setErrorMsg(parseError(error)),
+  });
 
   const handleEdit = (row: deskRow) => {
     setSelectedRow(row);
@@ -33,31 +49,6 @@ export function DesksDataGrid() {
   const handleAdd = () => {
     setAddModalOpen(true);
   };
-
-  const reserveDesk = trpc.desks.reservate.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-    onError: (error) => {
-      return (
-        <Alert severity="error">
-          Błąd podczas próby rezerwacji biurka: {error.message}
-        </Alert>
-      );
-    },
-  });
-  const deleteDesk = trpc.desks.delete.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-    onError: (error) => {
-      return (
-        <Alert severity="error">
-          Błąd podczas próby usuwania biurka: {error.message}
-        </Alert>
-      );
-    },
-  });
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 1 },
@@ -106,25 +97,29 @@ export function DesksDataGrid() {
     },
   ];
 
-  const { data, isLoading, error, refetch } = trpc.desks.getDesks.useQuery();
   if (isLoading) return <Alert severity="info">Trwa ładowanie danych</Alert>;
   if (error)
     return <Alert severity="error">Błąd podczas ładowania danych</Alert>;
 
   return (
-    <Box sx={{ height: "100%", width: "100%" }}>
+    <Box sx={{ height: "100%", width: "100%", marginBottom: "6vh" }}>
       <Box sx={{ width: "100%" }}>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => handleAdd()}
-          style={{ width: "100%" }}
+          onClick={handleAdd}
+          sx={{ width: "100%" }}
         >
           Dodaj biurko
         </Button>
       </Box>
+      {errorMsg && (
+        <Alert severity="error" onClose={() => setErrorMsg(null)}>
+          Błąd podczas rezerwacji biurka: {errorMsg}
+        </Alert>
+      )}
       <DataGrid
-        rows={data?.message || []}
+        rows={data || []}
         columns={columns}
         initialState={{
           pagination: {
@@ -141,7 +136,7 @@ export function DesksDataGrid() {
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         refetch={refetch}
-      ></AddModal>
+      />
       <EditModal
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}

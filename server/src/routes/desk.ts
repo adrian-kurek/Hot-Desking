@@ -14,7 +14,7 @@ export const deskRouter = router({
     try {
       logger.info("started fetching data about desks");
       const desks = await db.select().from(desksTable);
-      return { message: desks };
+      return desks;
     } catch (error) {
       logger.error("failed to get data about desks", { error });
       throw new TRPCError({
@@ -35,7 +35,7 @@ export const deskRouter = router({
       logger.error("failed to add a new desk", { error });
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "failed to fetch desks",
+        message: "failed to add desk",
         cause: error,
       });
     }
@@ -51,7 +51,7 @@ export const deskRouter = router({
           })
           .from(desksTable)
           .where(eq(desksTable.id, input.id));
-        if (desk.length == 0) {
+        if (desk.length === 0) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "failed to find desk with provided id",
@@ -59,16 +59,17 @@ export const deskRouter = router({
         }
         if (!desk[0].isAvailable) {
           throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "cannot edit reservated desk",
+            code: "PRECONDITION_FAILED",
+            message: "cannot edit reserved desk",
           });
         }
         await db.delete(desksTable).where(eq(desksTable.id, input.id));
       } catch (error) {
         logger.error("failed to delete a desk", { error });
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "failed to fetch desks",
+          message: "failed to delete desk",
           cause: error,
         });
       }
@@ -84,7 +85,7 @@ export const deskRouter = router({
           })
           .from(desksTable)
           .where(eq(desksTable.id, input.id));
-        if (desk.length == 0) {
+        if (desk.length === 0) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "failed to find desk with provided id",
@@ -92,8 +93,8 @@ export const deskRouter = router({
         }
         if (!desk[0].isAvailable) {
           throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "cannot edit reservated desk",
+            code: "PRECONDITION_FAILED",
+            message: "cannot edit reserved desk",
           });
         }
         await db
@@ -104,9 +105,10 @@ export const deskRouter = router({
           .where(eq(desksTable.id, input.id));
       } catch (error) {
         logger.error("failed to reservate a desk", { error });
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "failed to fetch desks",
+          message: "failed to reservate desk",
           cause: error,
         });
       }
@@ -123,7 +125,7 @@ export const deskRouter = router({
           })
           .from(desksTable)
           .where(eq(desksTable.id, input.id));
-        if (desk.length == 0) {
+        if (desk.length === 0) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "failed to find desk with provided id",
@@ -131,8 +133,8 @@ export const deskRouter = router({
         }
         if (!desk[0].isAvailable) {
           throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "cannot edit reservated desk",
+            code: "PRECONDITION_FAILED",
+            message: "cannot edit reserved desk",
           });
         }
 
@@ -144,9 +146,10 @@ export const deskRouter = router({
           .where(eq(desksTable.id, input.id));
       } catch (error) {
         logger.error("failed to update a desk", { error });
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "failed to fetch desks",
+          message: "failed to edit desk",
           cause: error,
         });
       }

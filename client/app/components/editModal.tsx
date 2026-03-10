@@ -16,6 +16,9 @@ const style = {
   color: "black",
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
+  gap: 2,
 };
 
 interface EditModalProps {
@@ -27,6 +30,8 @@ interface EditModalProps {
 
 export default function EditModal({ open, onClose, row }: EditModalProps) {
   const [newName, setNewName] = React.useState(row?.name || "");
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
   const { refetch } = trpc.desks.getDesks.useQuery();
   const updateDesk = trpc.desks.updateDesk.useMutation({
     onSuccess: () => {
@@ -34,15 +39,10 @@ export default function EditModal({ open, onClose, row }: EditModalProps) {
       onClose();
     },
     onError: (error) => {
-      return (
-        <Alert severity="error">
-          Błąd podczas próby aktualizowania nazwy biurka: {error.message}
-        </Alert>
-      );
+      const parsedErrorMsg = JSON.parse(error.message);
+      setErrorMsg(parsedErrorMsg[0]["message"]);
     },
   });
-
-
 
   React.useEffect(() => {
     if (open) {
@@ -56,6 +56,12 @@ export default function EditModal({ open, onClose, row }: EditModalProps) {
         <Typography variant="h6" fontWeight="bold">
           Edytuj nazwę biurka
         </Typography>
+
+        {errorMsg && (
+          <Alert severity="error" onClose={() => setErrorMsg(null)}>
+            Błąd podczas edycji biurka: {errorMsg}
+          </Alert>
+        )}
 
         <TextField
           label="Nazwa biurka"

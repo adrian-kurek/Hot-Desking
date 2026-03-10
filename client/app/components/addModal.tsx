@@ -15,6 +15,9 @@ const style = {
   color: "black",
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
+  gap: 2,
 };
 
 interface AddModalProps {
@@ -25,6 +28,8 @@ interface AddModalProps {
 
 export default function AddModal({ open, onClose }: AddModalProps) {
   const [newName, setNewName] = React.useState("");
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
   const { refetch } = trpc.desks.getDesks.useQuery();
 
   const addDesk = trpc.desks.add.useMutation({
@@ -33,16 +38,15 @@ export default function AddModal({ open, onClose }: AddModalProps) {
       refetch();
     },
     onError: (error) => {
-      return (
-        <Alert severity="error">
-          Błąd podczas dodawania biurka: {error.message}
-        </Alert>
-      );
+      const parsedErrorMsg = JSON.parse(error.message);
+      setErrorMsg(parsedErrorMsg[0]["message"]);
     },
   });
+
   React.useEffect(() => {
     if (open) {
       setNewName("");
+      setErrorMsg(null);
     }
   }, [open]);
 
@@ -52,6 +56,12 @@ export default function AddModal({ open, onClose }: AddModalProps) {
         <Typography variant="h6" fontWeight="bold">
           Dodaj nowę biurko
         </Typography>
+
+        {errorMsg && (
+          <Alert severity="error" onClose={() => setErrorMsg(null)}>
+            Błąd podczas dodawania biurka: {errorMsg}
+          </Alert>
+        )}
 
         <TextField
           label="Nazwa biurka"
@@ -67,6 +77,7 @@ export default function AddModal({ open, onClose }: AddModalProps) {
           variant="contained"
           color="primary"
           fullWidth
+          loading={addDesk.isPending}
           onClick={() => addDesk.mutate({ name: newName })}
         >
           Zapisz zmiany
