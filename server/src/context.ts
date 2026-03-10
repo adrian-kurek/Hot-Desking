@@ -18,5 +18,3 @@ if (!databaseURL) {
 export function createContext({ req, res }: CreateFastifyContextOptions) {
   return { req, res, db };
 }
-
-export type Context = inferAsyncReturnType<typeof createContext>;

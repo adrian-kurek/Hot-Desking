@@ -7,9 +7,11 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { trpc } from "./trpc";
 import type { Route } from "./+types/root";
 import "./app.css";
-
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -42,7 +44,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const url = import.meta.env.VITE_URL_BACKEND;
+  if (!url)
+    return (
+      <div className="p-6">
+        <div className="flex flex-col items-center mt-12">
+          <h1>Error</h1>
+          <p>URL_BACKEND not set in env file</p>
+        </div>
+      </div>
+    );
+  const queryClient = new QueryClient();
+
+  const trpcClient = trpc.createClient({
+    links: [
+      httpBatchLink({
+        url: url,
+      }),
+    ],
+  });
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
